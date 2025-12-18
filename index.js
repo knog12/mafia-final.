@@ -1,22 +1,26 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const { v4: uuidv4 } = require('uuid');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-    cors: {
-        origin: "*", // Allow all connections for simplicity in dev
-    }
+const io = new Server(server, { cors: { origin: "*" } });
+
+// --- التعديل الصحيح هنا ---
+// نحذف ../client/dist ونخليها public فقط
+const publicPath = path.join(__dirname, 'public');
+app.use(express.static(publicPath));
+
+// ... (باقي كود اللعبة والـ socket كما هو لا تلمسه) ...
+
+// --- وفي نهاية الملف تأكد من هذا السطر ---
+app.get('*', (req, res) => {
+    res.sendFile(path.join(publicPath, 'index.html'));
 });
 
-const PORT = 3000;
-const path = require('path');
-
-// Serve static files from the React app
-app.use(express.static(path.join(__dirname, '../client/dist')));
-
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log(`Server running on ${PORT}`));
 // Serve the React app for any other route (SPA fallback) - Place this AFTER API routes if any
 // But here we rely on socket.io which doesn't conflict with HTTP GET routes usually.
 // However, we should be careful if we add API routes later.
