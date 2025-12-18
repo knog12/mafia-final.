@@ -5,22 +5,41 @@ const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
 
-// --- التعديل الصحيح هنا ---
-// نحذف ../client/dist ونخليها public فقط
+// إعدادات Socket.io
+const io = new Server(server, {
+    cors: { origin: "*" }
+});
+
+// 1. تحديد مكان ملفات الموقع (المهم جداً)
 const publicPath = path.join(__dirname, 'public');
 app.use(express.static(publicPath));
 
-// ... (باقي كود اللعبة والـ socket كما هو لا تلمسه) ...
+// --- (منطقة منطق اللعبة) ---
+// يمكنك وضع متغيرات اللعبة هنا
+let rooms = {};
 
-// --- وفي نهاية الملف تأكد من هذا السطر ---
+io.on('connection', (socket) => {
+    console.log('User connected:', socket.id);
+
+    // هنا تضع أكواد اللعبة الخاصة بك (socket.on ...)
+    // إذا كان عندك منطق طويل، تأكد أن تنسخه وتضعه هنا مرة واحدة فقط
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected:', socket.id);
+    });
+});
+
+// 2. توجيه الزوار للصفحة الرئيسية دائماً
 app.get('*', (req, res) => {
     res.sendFile(path.join(publicPath, 'index.html'));
 });
 
+// 3. تشغيل السيرفر (مرة واحدة فقط في نهاية الملف)
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Server running on ${PORT}`));
+server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
 // Serve the React app for any other route (SPA fallback) - Place this AFTER API routes if any
 // But here we rely on socket.io which doesn't conflict with HTTP GET routes usually.
 // However, we should be careful if we add API routes later.
