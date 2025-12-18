@@ -5,53 +5,18 @@ const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-
-// إعدادات Socket.io
 const io = new Server(server, {
-    cors: { origin: "*" }
+    cors: {
+        origin: "*",
+    }
 });
 
-// 1. تحديد مكان ملفات الموقع (المهم جداً)
-const publicPath = path.join(__dirname, 'public');
-app.use(express.static(publicPath));
-
-// --- (منطقة منطق اللعبة) ---
-// يمكنك وضع متغيرات اللعبة هنا
-let rooms = {};
-
-io.on('connection', (socket) => {
-    console.log('User connected:', socket.id);
-
-    // هنا تضع أكواد اللعبة الخاصة بك (socket.on ...)
-    // إذا كان عندك منطق طويل، تأكد أن تنسخه وتضعه هنا مرة واحدة فقط
-
-    socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
-    });
-});
-
-// 2. توجيه الزوار للصفحة الرئيسية دائماً
-app.get('*', (req, res) => {
-    res.sendFile(path.join(publicPath, 'index.html'));
-});
-
-// 3. تشغيل السيرفر (مرة واحدة فقط في نهاية الملف)
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
-// Serve the React app for any other route (SPA fallback) - Place this AFTER API routes if any
-// But here we rely on socket.io which doesn't conflict with HTTP GET routes usually.
-// However, we should be careful if we add API routes later.
-// For now, let's put it at the end of the file, or right before server.listen, 
-// BUT Express executes middleware in order. 
-// Socket.io attaches to the HTTP server instance directly, not via Express routes usually.
-// So we can add the catch-all handler here or at the end. Best practice is at the end.
+
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, '../client/dist')));
 
 // --- Game State ---
-// We'll support multiple rooms, but for this specific request, we can focus on a single global state or simple room logic.
-// The user request implies "Host makes the game", so room logic is best.
-
 const rooms = {}; // roomId -> Room Object
 
 function createRoom(hostId) {
